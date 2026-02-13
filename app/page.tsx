@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef,创新, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as tf from '@tensorflow/tfjs';
 import * as cocossd from '@tensorflow-models/coco-ssd';
 import { Play, Shield, Zap, Activity, Eye, Info } from 'lucide-react';
@@ -49,9 +49,8 @@ export default function Coash26() {
           const predictions = await model.detect(videoRef.current);
           
           predictions.forEach(p => {
-            // منطق ذكي: إذا اكتشف كرة وكانت الثقة عالية
             if (p.class === 'sports ball' && p.score > 0.6) {
-               // هنا يمكن إضافة تنبيهات تكتيكية متقدمة
+               // منطق التحليل هنا
             }
           });
         }
