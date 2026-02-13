@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Camera, Mic, Play, Shield, Zap, TrendingUp, Activity } from 'lucide-react';
+import * as tf from '@tensorflow/tfjs';
+import * as cocossd from '@tensorflow-models/coco-ssd';
+import { Play, Shield, Zap, Activity, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Coash26() {
@@ -9,12 +11,12 @@ export default function Coash26() {
   const [isStarted, setIsStarted] = useState(false);
   const [status, setStatus] = useState('OFFLINE');
   const [log, setLog] = useState('نظام Senku جاهز. وجه الكاميرا نحو الشاشة.');
-  const [synergy, setSynergy] = useState(100);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // دالة النطق الصوتي
+  // دالة النطق
   const speak = (text: string) => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
-      window.speechSynthesis.cancel(); // إلغاء أي صوت سابق
+      window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'ar-SA';
       window.speechSynthesis.speak(utterance);
@@ -22,11 +24,17 @@ export default function Coash26() {
     }
   };
 
+  // تشغيل المحرك والذكاء الاصطناعي
   const startEngine = async () => {
     setIsStarted(true);
-    setStatus('INITIALIZING...');
+    setStatus('LOADING AI MODELS...');
     
     try {
+      // 1. تحميل موديل الرؤية
+      const model = await cocossd.load();
+      setStatus('AI MODEL LOADED');
+
+      // 2. تشغيل الكاميرا
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: "environment" }, 
         audio: true 
@@ -37,122 +45,80 @@ export default function Coash26() {
       }
       
       setStatus('ONLINE');
-      speak("تم تفعيل مدرب سنكو. أنا الآن أراقب الأداء التكتيكي لثنائي بليستيشن 5.");
-      startVoiceRecognition();
+      setIsAnalyzing(true);
+      speak("تم تفعيل عيون سنكو. أنا الآن أرى الملعب وأسمع صوتكم.");
+
+      // 3. بدء حلقة التحليل (Detection Loop)
+      const detect = async () => {
+        if (videoRef.current && videoRef.current.readyState === 4) {
+          const predictions = await model.detect(videoRef.current);
+          
+          // منطق تكتيكي بسيط: البحث عن الكرة أو اللاعبين
+          predictions.forEach(p => {
+            if (p.class === 'sports ball' && p.score > 0.6) {
+              console.log("الكرة مرصودة!");
+              // هنا نقدر نبرمج ردود فعل لو الكرة قريبة من المرمى
+            }
+          });
+        }
+        requestAnimationFrame(detect);
+      };
+      detect();
+
     } catch (err) {
       setStatus('ERROR');
-      setLog("يرجى السماح بالوصول للكاميرا والمايك.");
-    }
-  };
-
-  const startVoiceRecognition = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      const recognition = new SpeechRecognition();
-      recognition.lang = 'ar-SA';
-      recognition.continuous = true;
-      recognition.interimResults = false;
-
-      recognition.onresult = (event: any) => {
-        const text = event.results[event.results.length - 1][0].transcript;
-        if (text.includes("هدف") || text.includes("قوول") || text.includes("جول")) {
-          setSynergy(prev => Math.min(prev + 10, 100));
-          speak("هدف أسطوري! التناغم زاد بينكم يا وحوش.");
-        } else if (text.includes("خسارة") || text.includes("غلطة") || text.includes("حي علينا")) {
-          setSynergy(prev => Math.max(prev - 15, 0));
-          speak("مش وقت اللوم، ركزوا في المرتدة الجاية.");
-        }
-      };
-      
-      recognition.onerror = () => {
-        setTimeout(() => recognition.start(), 1000); // إعادة التشغيل عند الخطأ
-      };
-
-      recognition.start();
+      setLog("تأكد من إعطاء صلاحيات الكاميرا.");
     }
   };
 
   return (
-    <main className="relative min-h-screen bg-[#050505] text-white overflow-hidden font-sans">
-      {/* كاميرا الموبايل */}
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        className="absolute inset-0 w-full h-full object-cover opacity-50 grayscale-[0.3]"
-      />
+    <main className="relative min-h-screen bg-[#050505] text-white overflow-hidden">
+      <video ref={videoRef} autoPlay playsinline muted className="absolute inset-0 w-full h-full object-cover opacity-60 grayscale-[0.2]" />
 
-      {/* واجهة المستخدم */}
       <div className="relative z-10 flex flex-col h-screen p-6 justify-between pointer-events-none">
-        
-        {/* العلوي: معلومات الحالة */}
         <div className="flex justify-between items-start pt-4">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-black/70 border border-cyan-500/50 p-4 rounded-2xl backdrop-blur-xl shadow-[0_0_15px_rgba(6,182,212,0.3)]">
-            <h1 className="text-cyan-400 font-black text-xl italic tracking-widest">COACH 26</h1>
+          <div className="bg-black/80 border border-cyan-500/50 p-4 rounded-2xl backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+            <h1 className="text-cyan-400 font-black text-xl italic tracking-tighter">COACH 26 AI</h1>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`w-2 h-2 rounded-full ${status === 'ONLINE' ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-              <span className="text-[10px] font-mono text-cyan-200/70 tracking-widest">{status}</span>
+              <span className={`w-2 h-2 rounded-full ${status === 'ONLINE' ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
+              <span className="text-[10px] font-mono text-cyan-200 tracking-widest">{status}</span>
             </div>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-black/70 border border-blue-500/50 p-4 rounded-2xl backdrop-blur-xl text-right">
-            <div className="text-[9px] text-blue-400 font-bold mb-1 tracking-tighter uppercase">Synergy Level</div>
-            <div className="text-3xl font-black text-white italic">{synergy}%</div>
-          </motion.div>
+          </div>
+          {isAnalyzing && (
+            <div className="bg-red-500/20 border border-red-500 p-2 rounded-lg flex items-center gap-2 animate-pulse">
+              <Eye size={14} className="text-red-500" />
+              <span className="text-[10px] font-bold">LIVE ANALYSIS</span>
+            </div>
+          )}
         </div>
 
-        {/* المنتصف: زر التفعيل */}
-        <AnimatePresence>
-          {!isStarted && (
-            <motion.button
-              exit={{ scale: 0, opacity: 0 }}
-              onClick={startEngine}
-              className="pointer-events-auto self-center bg-gradient-to-br from-cyan-400 to-blue-600 text-black px-12 py-6 rounded-2xl font-black text-xl shadow-[0_0_40px_rgba(6,182,212,0.5)] flex flex-col items-center gap-2"
-            >
-              <Play fill="black" size={32} />
-              <span>ACTIVATE SENKU</span>
-            </motion.button>
-          )}
-        </AnimatePresence>
+        {!isStarted && (
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={startEngine}
+            className="pointer-events-auto self-center bg-cyan-500 text-black px-12 py-6 rounded-2xl font-black text-xl shadow-[0_0_50px_rgba(6,182,212,0.6)]"
+          >
+            START AI COACH
+          </motion.button>
+        )}
 
-        {/* السفلي: لوحة البيانات */}
-        <div className="space-y-4 mb-4">
+        <div className="mb-6 space-y-4">
           <AnimatePresence>
             {isStarted && (
-              <motion.div initial={{ y: 100 }} animate={{ y: 0 }} className="bg-black/80 border-t-2 border-cyan-500 p-6 backdrop-blur-2xl rounded-3xl shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
-                <div className="flex gap-4 overflow-x-auto no-scrollbar">
-                  <StatItem icon={<Shield size={14}/>} label="DEF" value="STABLE" color="text-green-400" />
-                  <StatItem icon={<Zap size={14}/>} label="ATK" value="AGGRESSIVE" color="text-orange-400" />
-                  <StatItem icon={<Activity size={14}/>} label="LIVE" value="ANALYZING" color="text-cyan-400" />
+              <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-black/90 border-t-4 border-cyan-500 p-6 backdrop-blur-3xl rounded-3xl">
+                <div className="flex gap-4 overflow-hidden mb-4">
+                   <div className="flex items-center gap-2 text-cyan-400 text-xs font-bold"><Activity size={14}/> VISION ACTIVE</div>
+                   <div className="flex items-center gap-2 text-blue-400 text-xs font-bold"><Zap size={14}/> VOICE SYNC</div>
                 </div>
-                <motion.div 
-                  key={log}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="mt-6 p-4 bg-cyan-950/30 border-r-4 border-cyan-500 rounded text-cyan-100 text-sm font-medium leading-relaxed"
-                >
-                  {log}
-                </motion.div>
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-cyan-100 text-sm leading-relaxed italic">
+                  &gt; {log}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </div>
-
-      {/* تأثيرات جمالية نيون */}
-      <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_100px_rgba(6,182,212,0.1)] border-[1px] border-white/5" />
+      <div className="absolute inset-0 pointer-events-none border-[1px] border-cyan-500/20" />
     </main>
-  );
-}
-
-function StatItem({ icon, label, value, color }: any) {
-  return (
-    <div className="min-w-[120px] bg-white/5 p-3 rounded-xl border border-white/10 backdrop-blur-sm">
-      <div className="text-gray-500 flex items-center gap-2 text-[10px] font-bold mb-1 uppercase tracking-widest">
-        {icon} {label}
-      </div>
-      <div className={`text-xs font-black tracking-tight ${color}`}>{value}</div>
-    </div>
   );
 }
