@@ -12,6 +12,8 @@
     "react": "^18",
     "react-dom": "^18",
     "next": "14.2.3",
+    "@tensorflow/tfjs": "latest",
+    "@tensorflow-models/coco-ssd": "latest",
     "lucide-react": "latest",
     "framer-motion": "latest",
     "clsx": "latest",
