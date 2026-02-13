@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef,创新, useState } from 'react';
 import * as tf from '@tensorflow/tfjs';
 import * as cocossd from '@tensorflow-models/coco-ssd';
-import { Play, Shield, Zap, Activity, Eye } from 'lucide-react';
+import { Play, Shield, Zap, Activity, Eye, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Coash26() {
@@ -13,7 +13,6 @@ export default function Coash26() {
   const [log, setLog] = useState('نظام Senku جاهز. وجه الكاميرا نحو الشاشة.');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  // دالة النطق
   const speak = (text: string) => {
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
@@ -24,17 +23,14 @@ export default function Coash26() {
     }
   };
 
-  // تشغيل المحرك والذكاء الاصطناعي
   const startEngine = async () => {
     setIsStarted(true);
-    setStatus('LOADING AI MODELS...');
+    setStatus('تحميل عقل المدرب...');
     
     try {
-      // 1. تحميل موديل الرؤية
       const model = await cocossd.load();
-      setStatus('AI MODEL LOADED');
+      setStatus('AI READY');
 
-      // 2. تشغيل الكاميرا
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: "environment" }, 
         audio: true 
@@ -46,18 +42,16 @@ export default function Coash26() {
       
       setStatus('ONLINE');
       setIsAnalyzing(true);
-      speak("تم تفعيل عيون سنكو. أنا الآن أرى الملعب وأسمع صوتكم.");
+      speak("تم تفعيل مدرب سنكو الذكي. أنا الآن أحلل المباراة مباشرة.");
 
-      // 3. بدء حلقة التحليل (Detection Loop)
       const detect = async () => {
         if (videoRef.current && videoRef.current.readyState === 4) {
           const predictions = await model.detect(videoRef.current);
           
-          // منطق تكتيكي بسيط: البحث عن الكرة أو اللاعبين
           predictions.forEach(p => {
+            // منطق ذكي: إذا اكتشف كرة وكانت الثقة عالية
             if (p.class === 'sports ball' && p.score > 0.6) {
-              console.log("الكرة مرصودة!");
-              // هنا نقدر نبرمج ردود فعل لو الكرة قريبة من المرمى
+               // هنا يمكن إضافة تنبيهات تكتيكية متقدمة
             }
           });
         }
@@ -67,27 +61,27 @@ export default function Coash26() {
 
     } catch (err) {
       setStatus('ERROR');
-      setLog("تأكد من إعطاء صلاحيات الكاميرا.");
+      setLog("تأكد من إعطاء صلاحيات الكاميرا والمايك.");
     }
   };
 
   return (
     <main className="relative min-h-screen bg-[#050505] text-white overflow-hidden">
-      <video ref={videoRef} autoPlay playsinline muted className="absolute inset-0 w-full h-full object-cover opacity-60 grayscale-[0.2]" />
+      <video ref={videoRef} autoPlay playsInline muted className="absolute inset-0 w-full h-full object-cover opacity-60 grayscale-[0.2]" />
 
       <div className="relative z-10 flex flex-col h-screen p-6 justify-between pointer-events-none">
         <div className="flex justify-between items-start pt-4">
           <div className="bg-black/80 border border-cyan-500/50 p-4 rounded-2xl backdrop-blur-md shadow-[0_0_20px_rgba(6,182,212,0.4)]">
-            <h1 className="text-cyan-400 font-black text-xl italic tracking-tighter">COACH 26 AI</h1>
+            <h1 className="text-cyan-400 font-black text-xl italic">COACH 26 AI</h1>
             <div className="flex items-center gap-2 mt-1">
               <span className={`w-2 h-2 rounded-full ${status === 'ONLINE' ? 'bg-green-500 animate-pulse' : 'bg-yellow-500'}`} />
-              <span className="text-[10px] font-mono text-cyan-200 tracking-widest">{status}</span>
+              <span className="text-[10px] font-mono text-cyan-200 uppercase tracking-widest">{status}</span>
             </div>
           </div>
           {isAnalyzing && (
-            <div className="bg-red-500/20 border border-red-500 p-2 rounded-lg flex items-center gap-2 animate-pulse">
+            <div className="bg-red-500/20 border border-red-500 p-2 rounded-lg flex items-center gap-2 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]">
               <Eye size={14} className="text-red-500" />
-              <span className="text-[10px] font-bold">LIVE ANALYSIS</span>
+              <span className="text-[10px] font-bold">ANALYSIS ACTIVE</span>
             </div>
           )}
         </div>
@@ -96,21 +90,22 @@ export default function Coash26() {
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={startEngine}
-            className="pointer-events-auto self-center bg-cyan-500 text-black px-12 py-6 rounded-2xl font-black text-xl shadow-[0_0_50px_rgba(6,182,212,0.6)]"
+            className="pointer-events-auto self-center bg-gradient-to-br from-cyan-400 to-blue-600 text-black px-12 py-6 rounded-3xl font-black text-xl shadow-[0_0_50px_rgba(6,182,212,0.5)] flex flex-col items-center gap-2"
           >
-            START AI COACH
+            <Play fill="black" size={24} />
+            <span>START SENKU AI</span>
           </motion.button>
         )}
 
         <div className="mb-6 space-y-4">
           <AnimatePresence>
             {isStarted && (
-              <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-black/90 border-t-4 border-cyan-500 p-6 backdrop-blur-3xl rounded-3xl">
-                <div className="flex gap-4 overflow-hidden mb-4">
-                   <div className="flex items-center gap-2 text-cyan-400 text-xs font-bold"><Activity size={14}/> VISION ACTIVE</div>
-                   <div className="flex items-center gap-2 text-blue-400 text-xs font-bold"><Zap size={14}/> VOICE SYNC</div>
+              <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="bg-black/90 border-t-4 border-cyan-500 p-6 backdrop-blur-3xl rounded-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.8)]">
+                <div className="flex gap-4 mb-4 overflow-x-auto no-scrollbar">
+                   <div className="min-w-[120px] bg-cyan-500/10 border border-cyan-500/30 p-2 rounded-lg text-cyan-400 text-[10px] font-bold flex items-center gap-2 uppercase tracking-tighter"><Activity size={12}/> Vision Engine</div>
+                   <div className="min-w-[120px] bg-blue-500/10 border border-blue-500/30 p-2 rounded-lg text-blue-400 text-[10px] font-bold flex items-center gap-2 uppercase tracking-tighter"><Zap size={12}/> Voice Sync</div>
                 </div>
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10 text-cyan-100 text-sm leading-relaxed italic">
+                <div className="p-4 bg-cyan-950/20 border-r-4 border-cyan-500 rounded-xl text-cyan-100 text-sm leading-relaxed italic">
                   &gt; {log}
                 </div>
               </motion.div>
@@ -118,7 +113,7 @@ export default function Coash26() {
           </AnimatePresence>
         </div>
       </div>
-      <div className="absolute inset-0 pointer-events-none border-[1px] border-cyan-500/20" />
+      <div className="absolute inset-0 pointer-events-none border-[1px] border-cyan-500/10" />
     </main>
   );
 }
